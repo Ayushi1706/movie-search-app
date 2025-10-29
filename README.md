@@ -1,8 +1,10 @@
-# Movie Search App
+# MovieMate
 
-- Hello guys, this is the flutist programmer and in this project I will show you how to build a movie search app using HTML, CSS and JavaScript.
+- Hello guys, this is our IP project and in this project we have build a movie search app 
 
 ## Instructions to run the project
+
+click here:
 
 1. Install Visual Studio Code from [here](https://code.visualstudio.com/).
 2. Open Visual Studio Code and Install the Live Server extension from the Extensions tab.
