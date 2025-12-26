@@ -17,11 +17,13 @@ let currentQuery = '';
 
 pagination.style.display = 'none';
 
+// Search button
 searchBtn.addEventListener('click', () => {
   currentPage = 1;
   fetchMovies();
 });
 
+// Enter key search
 movieInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') {
     currentPage = 1;
@@ -29,10 +31,12 @@ movieInput.addEventListener('keypress', (e) => {
   }
 });
 
+// Close modal
 closeModal.addEventListener('click', () => {
   modal.style.display = 'none';
 });
 
+// Pagination controls
 prevPageBtn.addEventListener('click', () => {
   if (currentPage > 1) {
     currentPage--;
@@ -40,29 +44,24 @@ prevPageBtn.addEventListener('click', () => {
     scrollToTop();
   }
 });
-
 nextPageBtn.addEventListener('click', () => {
   currentPage++;
   fetchMovies();
   scrollToTop();
 });
 
+// Scroll-to-top button visibility
 window.addEventListener('scroll', () => {
-  if (document.documentElement.scrollTop > 200) {
-    scrollTopBtn.style.display = 'block';
-  } else {
-    scrollTopBtn.style.display = 'none';
-  }
+  scrollTopBtn.style.display = document.documentElement.scrollTop > 200 ? 'block' : 'none';
 });
 
-scrollTopBtn.addEventListener('click', () => {
-  scrollToTop();
-});
+scrollTopBtn.addEventListener('click', scrollToTop);
 
 function scrollToTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+// --- Fetch Movies ---
 async function fetchMovies() {
   currentQuery = movieInput.value.trim();
   if (!currentQuery) {
@@ -71,12 +70,10 @@ async function fetchMovies() {
     return;
   }
 
-  movieContainer.innerHTML = '<p>Loading ...</p>';
+  movieContainer.innerHTML = '<p>Loading...</p>';
 
   try {
-    const res = await fetch(
-      `https://www.omdbapi.com/?s=${currentQuery}&page=${currentPage}&apikey=${API_KEY}`
-    );
+    const res = await fetch(`https://www.omdbapi.com/?s=${currentQuery}&page=${currentPage}&apikey=${API_KEY}`);
     const data = await res.json();
 
     if (data.Response === 'False') {
@@ -85,42 +82,34 @@ async function fetchMovies() {
       return;
     }
 
-    movieContainer.innerHTML = data.Search.map(
-      (movie) => `
+    movieContainer.innerHTML = data.Search.map(movie => `
       <div class="movie-card" onclick="showDetails('${movie.imdbID}')">
-        <img src="${
-          movie.Poster !== 'N/A'
-            ? movie.Poster
-            : 'https://via.placeholder.com/220x330'
-        }" alt="${movie.Title}">
+        <img src="${movie.Poster !== 'N/A' ? movie.Poster : 'https://via.placeholder.com/220x330'}">
         <h2>${movie.Title}</h2>
         <p>${movie.Year}</p>
       </div>
-    `
-    ).join('');
+    `).join('');
 
     pagination.style.display = 'flex';
     pageInfo.textContent = `Page ${currentPage}`;
     prevPageBtn.disabled = currentPage === 1;
-    nextPageBtn.disabled = data.Search.length < 10;
+    nextPageBtn.disabled = data.Search.length < 10; // no more pages if <10 results
+
   } catch (error) {
-    movieContainer.innerHTML =
-      '<p>Something went wrong. Please try again later.</p>';
-    pagination.style.display = 'none';
+    movieContainer.innerHTML = '<p>Something went wrong. Try again later.</p>';
+    console.log(error);
   }
 }
 
+// --- Movie Details Modal ---
 async function showDetails(id) {
   try {
-    const res = await fetch(
-      `https://www.omdbapi.com/?i=${id}&apikey=${API_KEY}`
-    );
+    const res = await fetch(`https://www.omdbapi.com/?i=${id}&apikey=${API_KEY}`);
     const movie = await res.json();
 
-    modalPoster.src =
-      movie.Poster !== 'N/A'
-        ? movie.Poster
-        : 'https://via.placeholder.com/250x350';
+    modalPoster.src = movie.Poster !== 'N/A'
+      ? movie.Poster 
+      : 'https://via.placeholder.com/250x350';
 
     modalDetails.innerHTML = `
       <h2>${movie.Title} (${movie.Year})</h2>
@@ -131,18 +120,21 @@ async function showDetails(id) {
       <p><strong>Plot:</strong> ${movie.Plot}</p>
       <button onclick="addToFavorites('${movie.imdbID}', '${movie.Title}', '${movie.Poster}', '${movie.Year}')">❤️ Add to Favorites</button>
     `;
+
     modal.style.display = 'flex';
   } catch (error) {
-    console.error(error);
+    console.log(error);
   }
 }
 
+// --- Add to Favorite Local Storage ---
 function addToFavorites(id, title, poster, year) {
   const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-  if (!favorites.find((movie) => movie.imdbID === id)) {
+
+  if (!favorites.find(movie => movie.imdbID === id)) {
     favorites.push({ imdbID: id, Title: title, Poster: poster, Year: year });
     localStorage.setItem('favorites', JSON.stringify(favorites));
-    alert(`${title} add to favorites!`);
+    alert(`${title} added to favorites!`);
   } else {
     alert('Already in favorites!');
   }
